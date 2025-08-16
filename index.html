@@ -12,23 +12,26 @@
         <button type="submit">Send</button>
     </form>
 
-    <script>
-        document.getElementById('emailForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let res = await fetch(https://my-mailer-backend.onrender.com/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: document.getElementById('to').value,
-                    subject: document.getElementById('subject').value,
-                    text: document.getElementById('text').value
-                })
-            });
-            let data = await res.json();
-            alert(data.success ? 'Email Sent!' : 'Error: ' + data.error);
-        });
-    </script>
+   <script>
+document.getElementById("emailForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    let to = document.getElementById("to").value;
+    let subject = document.getElementById("subject").value;
+    let text = document.getElementById("text").value;
+
+    let res = await fetch("https://my-mailer-backend.onrender.com/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to, subject, text })
+    });
+
+    let data = await res.json();
+    alert(data.message);
+});
+</script>
 </body>
 </html>
+
 
 
