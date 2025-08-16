@@ -1,37 +1,164 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Mailer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Mailer Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Send an Email</h1>
-    <form id="emailForm">
-        <input type="email" id="to" placeholder="Recipient Email" required><br>
-        <input type="text" id="subject" placeholder="Subject" required><br>
-        <textarea id="text" placeholder="Message"></textarea><br>
-        <button type="submit">Send</button>
-    </form>
+<body class="bg-[#1e1e2f] text-white font-sans flex h-screen">
 
-   <script>
-document.getElementById("emailForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  <!-- Sidebar -->
+  <aside class="w-64 bg-[#141422] flex flex-col p-6">
+    <h1 class="text-2xl font-bold text-cyan-400 mb-8">My Mailer</h1>
+    <nav class="flex flex-col space-y-4">
+      <a href="#" class="hover:text-cyan-300">📧 Send Mail</a>
+      <a href="#" class="hover:text-cyan-300">📂 Templates</a>
+      <a href="#" class="hover:text-cyan-300">📜 History</a>
+      <a href="#" class="hover:text-cyan-300">⚙ Settings</a>
+    </nav>
+    <div class="mt-auto text-sm text-gray-500">© 2025 MyMailer</div>
+  </aside>
 
-    let to = document.getElementById("to").value;
-    let subject = document.getElementById("subject").value;
-    let text = document.getElementById("text").value;
+  <!-- Main Content -->
+  <main class="flex-1 p-10 overflow-y-auto">
+    <header class="flex justify-between items-center mb-8">
+      <input type="text" placeholder="Search..." class="bg-[#141422] text-gray-300 px-4 py-2 rounded-md w-1/3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+      <div class="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-black font-bold">A</div>
+    </header>
 
-    let res = await fetch("https://my-mailer-backend.onrender.com/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, text })
+    <!-- Send Mail Card -->
+    <section class="bg-[#141422] rounded-xl p-8 shadow-lg mb-8">
+      <h2 class="text-xl font-semibold mb-6 text-cyan-400">Send Email</h2>
+
+      <form id="emailForm" class="space-y-6">
+        <div>
+          <label for="to" class="block text-sm mb-2">To</label>
+          <input type="email" id="to" name="to" placeholder="recipient@example.com"
+                 class="w-full px-4 py-2 rounded-md bg-[#1e1e2f] border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+        </div>
+
+        <div>
+          <label for="subject" class="block text-sm mb-2">Subject</label>
+          <input type="text" id="subject" name="subject" placeholder="Email subject"
+                 class="w-full px-4 py-2 rounded-md bg-[#1e1e2f] border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+        </div>
+
+        <div>
+          <label for="message" class="block text-sm mb-2">Message</label>
+          <textarea id="message" name="message" rows="6" placeholder="Write your message..."
+                    class="w-full px-4 py-2 rounded-md bg-[#1e1e2f] border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"></textarea>
+        </div>
+
+        <button id="sendBtn" type="submit"
+                class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-md transition duration-200 flex justify-center items-center">
+          🚀 Send Email
+        </button>
+      </form>
+    </section>
+
+    <!-- History Table -->
+    <section class="bg-[#141422] rounded-xl p-8 shadow-lg">
+      <h2 class="text-xl font-semibold mb-6 text-cyan-400">📜 Sent Emails History</h2>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-600 text-gray-300">
+            <th class="py-2 px-3">To</th>
+            <th class="py-2 px-3">Subject</th>
+            <th class="py-2 px-3">Date</th>
+            <th class="py-2 px-3">Status</th>
+          </tr>
+        </thead>
+        <tbody id="historyTable" class="text-gray-400">
+          <!-- History rows will be added here -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-4 right-4 bg-cyan-500 text-black px-6 py-3 rounded shadow-lg font-semibold">
+      Sent Successfully ✅
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('emailForm');
+    const toast = document.getElementById('toast');
+    const sendBtn = document.getElementById('sendBtn');
+    const historyTable = document.getElementById('historyTable');
+
+    // Store email history in memory
+    let emailHistory = [];
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const data = {
+        to: form.to.value,
+        subject: form.subject.value,
+        message: form.message.value
+      };
+
+      // Change button to loading state
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg> Sending...`;
+
+      let status = "❌ Failed";
+      try {
+        let res = await fetch('/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          status = "✅ Sent";
+          toast.innerText = "✅ Email Sent Successfully!";
+          toast.classList.remove("hidden");
+          setTimeout(() => toast.classList.add("hidden"), 3000);
+          form.reset();
+        } else {
+          toast.innerText = "❌ Failed to Send Email!";
+          toast.classList.remove("hidden");
+          setTimeout(() => toast.classList.add("hidden"), 3000);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        // Add to history
+        emailHistory.unshift({
+          to: data.to,
+          subject: data.subject,
+          date: new Date().toLocaleString(),
+          status: status
+        });
+
+        // Keep only last 10
+        if (emailHistory.length > 10) emailHistory.pop();
+
+        // Update history table
+        renderHistory();
+
+        // Restore button
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = "🚀 Send Email";
+      }
     });
 
-    let data = await res.json();
-    alert(data.message);
-});
-</script>
+    function renderHistory() {
+      historyTable.innerHTML = emailHistory.map(item => `
+        <tr class="border-b border-gray-700">
+          <td class="py-2 px-3">${item.to}</td>
+          <td class="py-2 px-3">${item.subject}</td>
+          <td class="py-2 px-3">${item.date}</td>
+          <td class="py-2 px-3">${item.status}</td>
+        </tr>
+      `).join('');
+    }
+  </script>
+
 </body>
 </html>
-
-
-
