@@ -15,7 +15,7 @@
     <script>
         document.getElementById('emailForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            let res = await fetch('https://YOUR_RENDER_BACKEND_URL/send', {
+            let res = await fetch(https://my-mailer-backend.onrender.com, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -30,3 +30,4 @@
     </script>
 </body>
 </html>
+
